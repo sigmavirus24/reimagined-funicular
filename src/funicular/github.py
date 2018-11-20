@@ -42,11 +42,13 @@ class GitHub:
             installation_id=self.installation_id,
         )
 
-    def column(self, *,
-               project: Project,
-               name: str,
-               organization: typing.Optional[Organization] = None,
-               ):
+    def column(
+        self,
+        *,
+        project: Project,
+        name: str,
+        organization: typing.Optional[Organization] = None,
+    ):
         """Retrieve a project column."""
         if isinstance(project, int):
             project = self.project(organization=organization, number=project)
@@ -68,10 +70,7 @@ class GitHub:
         """
         return self.github.organization(name)
 
-    def project(self, *,
-                organization: Organization,
-                number: int,
-                ):
+    def project(self, *, organization: Organization, number: int):
         """Retrieve a project by its number.
 
         :param organization:
@@ -95,11 +94,13 @@ class GitHub:
 
         raise exceptions.ProjectNotFound()
 
-    def cards_from(self, *,
-                   column: Column,
-                   organization: typing.Optional[Organization] = None,
-                   project: typing.Optional[Project] = None,
-                   ):
+    def cards_from(
+        self,
+        *,
+        column: Column,
+        organization: typing.Optional[Organization] = None,
+        project: typing.Optional[Project] = None,
+    ):
         """Retrieve the cards from a project column.
 
         :param column:
@@ -113,18 +114,21 @@ class GitHub:
         """
         if isinstance(column, str):
             if isinstance(project, int):
-                project = self.project(organization=organization,
-                                       number=project)
+                project = self.project(
+                    organization=organization, number=project
+                )
             column = self.column(project=project, name=column)
 
         for card in column.cards():
             yield card
 
-    def issues_from(self, *,
-                    column: Column,
-                    organization: typing.Optional[Organization] = None,
-                    project: typing.Optional[Project] = None,
-                    ):
+    def issues_from(
+        self,
+        *,
+        column: Column,
+        organization: typing.Optional[Organization] = None,
+        project: typing.Optional[Project] = None,
+    ):
         """Retrieve the issues from a project column.
 
         :param column:
@@ -136,22 +140,23 @@ class GitHub:
         :returns:
             Generator of issues.
         """
-        for card in self.cards_from(column=column,
-                                    organization=organization,
-                                    project=project):
+        for card in self.cards_from(
+            column=column, organization=organization, project=project
+        ):
             if not card.content_url:
                 continue
             content_url = urllib.parse.urlparse(card.content_url)
             match = URL_PATH_RE.match(content_url.path)
             if not match:
-                log.debug("Could not parse issue info from content url",
-                          content_url=card.content_url,
-                          parsed_path=content_url.path,
-                          )
+                log.debug(
+                    "Could not parse issue info from content url",
+                    content_url=card.content_url,
+                    parsed_path=content_url.path,
+                )
                 continue
             match = match.groupdict()
-            owner = match.get('owner')
-            repository = match.get('repository')
-            number = int(match.get('number'))
+            owner = match.get("owner")
+            repository = match.get("repository")
+            number = int(match.get("number"))
             issue = self.github.issue(owner, repository, number)
             yield issue

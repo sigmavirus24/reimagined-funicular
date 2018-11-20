@@ -13,7 +13,9 @@ log = structlog.get_logger()
 
 def build_parser() -> argparse.ArgumentParser:
     """Build an ArgumentParser."""
-    parser = argparse.ArgumentParser(description="Export GitHub issues to CSV")
+    parser = argparse.ArgumentParser(
+        description="Export GitHub issues to CSV"
+    )
     parser.add_argument(
         "--app-id",
         type=int,
@@ -23,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--installation-id",
         type=int,
         help="The id for the installation of the GitHub App used for "
-             "authentication.",
+        "authentication.",
     )
     parser.add_argument(
         "--private-key-file",
@@ -80,8 +82,9 @@ def issue_dictionary_from(column, issue) -> dict:
         "project column": column.name,
         "issue title": issue.title,
         "issue description": f"{issue.body}\n\n---\n\n{issue.html_url}",
-        "labels": ";".join(f"'{label.name}'"
-                           for label in issue.original_labels),
+        "labels": ";".join(
+            f"'{label.name}'" for label in issue.original_labels
+        ),
     }
 
 
@@ -89,12 +92,13 @@ def main(*, args: typing.List[str] = None):
     """Run our little data transfer program."""
     parser = build_parser()
     arguments = parser.parse_args()
-    log.debug('args.parsed', arguments=arguments)
+    log.debug("args.parsed", arguments=arguments)
 
     gh = github_from(arguments)
     csvwriter = csvwriter_from(arguments)
-    project = gh.project(organization=arguments.organization,
-                         number=arguments.project)
+    project = gh.project(
+        organization=arguments.organization, number=arguments.project
+    )
     for column in project.columns():
         for issue in gh.issues_from(column=column):
             csvwriter.writerow(issue_dictionary_from(column, issue))
