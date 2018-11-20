@@ -71,6 +71,7 @@ def csvwriter_from(arguments: argparse.Namespace) -> csv.DictWriter:
         quoting=csv.QUOTE_ALL,
     )
     writer.writeheader()
+    return writer
 
 
 def issue_dictionary_from(column, issue) -> dict:
@@ -78,7 +79,7 @@ def issue_dictionary_from(column, issue) -> dict:
     return {
         "project column": column.name,
         "issue title": issue.title,
-        "issue desccription": f"{issue.body}\n\n---\n\n{issue.html_url}",
+        "issue description": f"{issue.body}\n\n---\n\n{issue.html_url}",
         "labels": ";".join(f"'{label.name}'"
                            for label in issue.original_labels),
     }
@@ -86,9 +87,8 @@ def issue_dictionary_from(column, issue) -> dict:
 
 def main(*, args: typing.List[str] = None):
     """Run our little data transfer program."""
-    args = args or sys.argv[:]
     parser = build_parser()
-    arguments = parser.parse_args(args)
+    arguments = parser.parse_args()
     log.debug('args.parsed', arguments=arguments)
 
     gh = github_from(arguments)
@@ -98,8 +98,8 @@ def main(*, args: typing.List[str] = None):
     for column in project.columns():
         for issue in gh.issues_from(column=column):
             csvwriter.writerow(issue_dictionary_from(column, issue))
-            log.debug("issue.found",
-                      issue_number=issue.number,
-                      repository=str(issue.repository),
-                      )
+    #        log.debug("issue.found",
+    #                  issue_number=issue.number,
+    #                  repository=str(issue.repository),
+    #                  )
     return

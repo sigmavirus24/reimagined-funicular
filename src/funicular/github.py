@@ -15,7 +15,7 @@ Project = typing.Union[github3.projects.Project, int]
 Column = typing.Union[github3.projects.ProjectColumn, str]
 
 URL_PATH_RE = re.compile(
-    r"/repos/(?P<owner>[^/]+)/(?P<repository>[^/]+)/issues/(?<number>\d+)"
+    r"/repos/(?P<owner>[^/]+)/(?P<repository>[^/]+)/issues/(?P<number>\d+)"
 )
 
 log = structlog.get_logger()
@@ -28,7 +28,7 @@ class GitHub:
     app_id: int = attr.ib(converter=int)
     installation_id: int = attr.ib(converter=int)
     private_key_pem_bytes: bytes = attr.ib()
-    github: github3.GitHub = attr.Factory(github3.GitHub)
+    github: github3.GitHub = attr.ib(factory=github3.GitHub)
 
     def __attrs_post_init__(self):
         """Login after creating our object."""
@@ -45,7 +45,7 @@ class GitHub:
     def column(self, *,
                project: Project,
                name: str,
-               organization: typing.Optiona[Organization] = None,
+               organization: typing.Optional[Organization] = None,
                ):
         """Retrieve a project column."""
         if isinstance(project, int):
@@ -139,6 +139,8 @@ class GitHub:
         for card in self.cards_from(column=column,
                                     organization=organization,
                                     project=project):
+            if not card.content_url:
+                continue
             content_url = urllib.parse.urlparse(card.content_url)
             match = URL_PATH_RE.match(content_url.path)
             if not match:
@@ -146,6 +148,8 @@ class GitHub:
                           content_url=card.content_url,
                           parsed_path=content_url.path,
                           )
+                continue
+            match = match.groupdict()
             owner = match.get('owner')
             repository = match.get('repository')
             number = int(match.get('number'))
